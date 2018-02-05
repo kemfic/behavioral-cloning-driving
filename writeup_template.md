@@ -54,15 +54,33 @@ The model.py file contains the code for training and saving the convolution neur
 
 #### 1. An appropriate model architecture has been employed
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
+Layer (type)| Output Shape | Param # 
+---|---|---
+cropping2d_1 (Cropping2D) | (None, 75, 320, 3) | 0 
+Normalization(Lambda) | (None, 75, 320, 3) | 0         
+Convolution (Conv2D) | (None, 36, 158, 24) | 1824      
+Convolution (Conv2D)) | (None, 16, 77, 36) | 21636     
+Convolution (Conv2D) | (None, 6, 37, 48) | 43248     
+Convolution (Conv2D) | (None, 4, 35, 64) | 27712     
+Convolution (Conv2D) | (None, 2, 33, 64) | 36928     
+Flatten (Flatten) | (None, 4224) | 0         
+Fully Connected (Dense) | (None, 1162) | 4909450   
+Fully Connected (Dense) | (None, 100) | 116300    
+Fully Connected (Dense) | (None, 50) | 5050      
+Fully Connected (Dense) | (None, 10) | 510       
+Fully Connected (Dense) | (None, 1) | 11      
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
+Total params: 5,162,669
+Trainable params: 5,162,669
+Non-trainable params: 0
+
+The model uses ELU activation functions on every layer except for the final layer, and also introduces cropping and normalization to increase accuracy.
 
 #### 2. Attempts to reduce overfitting in the model
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
+Overfitting was not observed when training the model on my dataset, so I didn't feel the need to introduce dropout layers into the network.
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track. Since the model sucessfully completed track 1, we can conclude that the model was able to generalize the driving data to navigate through track 1
 
 #### 3. Model parameter tuning
 
@@ -70,9 +88,7 @@ The model used an adam optimizer, so the learning rate was not tuned manually (m
 
 #### 4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road ... 
-
-For details about how I created the training data, see the next section. 
+In order to collect a diverse dataset, I recorded driving data from tracks 1 & 2. I drove through each track 4 times, twice in the normal direction, and twice in the opposite direction to maintain an even dataset. An Xbox controller was used to drive the vehicle, as the analog joystick was better for more accurate steering control. 
 
 ### Model Architecture and Training Strategy
 
