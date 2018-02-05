@@ -1,0 +1,143 @@
+import os
+import csv
+import skimage
+from skimage import color, transform, util
+from keras.applications.inception_resnet_v2 import InceptionResNetV2
+from keras.models import Model
+from keras.layers import Flatten, Dense, GlobalAveragePooling2D, Lambda, Input
+from keras import backend as K
+
+import sklearn
+from sklearn.model_selection import train_test_split
+
+import pandas as pd
+import os
+
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import matplotlib
+import numpy as np
+
+import skimage
+from skimage import exposure, transform, color
+
+import random
+
+drivingInfo = pd.read_csv('data/driving_log.csv', names=['Center', 'Left', 'Right', 'Steer', 'Throttle', 'Brake', 'Speed'], header=None)
+
+drive_train, drive_test = train_test_split(drivingInfo, test_size=0.2)
+
+X_train = drive_train['Center'].values, drive_train['Left'].values, drive_train['Right'].values
+
+y_train = drive_train['Steer'].values
+
+X_test = drive_test['Center'].values, drive_test['Left'].values, drive_test['Right'].values
+
+y_test = drive_test['Steer'].values
+
+image_shape = (100, 320, 3)
+batch_size = 64
+epochs = 10
+learning_rate = 0.01 # Probably won't use
+
+######################## GENERATOR & DATA PREPROCESSING ############################
+
+def preprocess(img):
+    img = img[60:, :, :] # Crop the top of the image
+    img = exposure.equalize_adapthist(img) # Adaptive Histogram
+    img = color.convert_colorspace(img, 'RGB', 'XYZ') # RGB to XYZ Colorspace Conversion
+    img = transform.resize(img, (100, 320)) # Resize
+    return img
+
+def rand_flip(img, angle): # Randomly flips images
+    if np.random.rand < 0.5:
+        img = np.flip(img, 1)
+        angle = -angle
+    return img, angle
+
+def rand_transform(img, angle): # Randomly scales, shears, translates, and rotates images
+    scale = [random.uniform(0.8, 1.2), random.uniform(0.8,1.2)]
+    shear = random.uniform(-0.3, 0.3)
+    rotation = random.uniform(-0.3, 0.3)
+    translation = int(random.uniform(-50, 50)), int(random.uniform(-50, 50))
+    tform = transform.AffineTransform(scale=scale, shear=shear, rotation=rotation, translation=translation)
+    img = transform.warp(img, tform, order=1, mode='edge')
+    return img, angle
+
+def imgaug(img, label): # Chooses a random image from L/C/R Cameras, then augments them
+    choice = np.random.choice(3)
+    if choice == 0:
+        augimg = mpimg.imread(img[1])
+        label+= 0.2
+    elif choice == 1:
+        augimg =  mpimg.imread(img[2])
+        label -= 0.2
+    else:
+        augimg = mpimg.imread(img[0])
+    
+    augimg = rand_transform(augimg, label)
+    augimg = rand_flip(augimg, label)
+    
+    return augimg, label
+
+def generator(img_path, labels, batch_size=64, augment=False): 
+    images = np.empty([batch_size, 100, 320, 3])
+    angles = np.empty(batch_size)
+    while True:
+        
+        for index in np.random.permutation(img_path.shape[0]):
+            images = img_path[index]
+            angle = labels[index]
+            
+            if augment and np.random.rand < 0.5:
+                image = imgaug(images, angle)
+                
+            else:
+                image = mpimg.imread(images[0])
+
+            images[i] = preprocess(image)
+            angles[i] = angle
+            i+=1
+            if i >= batch_size:
+                i=0
+                break
+        yield img, angles
+
+################################# NETWORK ##########################################
+
+input_tensor = Input(shape=(image_shape))
+base_model = InceptionResNetV2(input_tensor=input_tensor, include_top=False, weights='imagenet')
+
+x = base_model.output
+# pool = GlobalAveragePooling2D(x)
+flat = Flatten()(x)
+fc1 = Dense(1200, activation='relu')(flat)
+fc2 = Dense(100, activation='relu')(fc1)
+fc3 = Dense(50, activation='relu')(fc2)
+fc4 = Dense(10, activation='relu')(fc3)
+prediction = Dense(1)(fc4)
+
+model = Model(inputs=base_model.input, outputs=prediction)
+
+for layer in base_model.layers:
+    layer.trainable = False
+
+model.compile(optimizer='adam', loss='mse')
+
+model.fit_generator(generator(X_train, y_train, augment=True), steps_per_epoch=100, epochs=10, verbose=2, workers=2, use_multiprocessing=True, shuffle=True)
+
+
+for layer in model.layers[:-2]:
+   layer.trainable = False
+for layer in model.layers[-2:]:
+   layer.trainable = True
+    
+model.compile(optimizer='adam', loss='mse')
+
+model.fit_generator(generator(X_train, y_train, augment=True), steps_per_epoch=100, epochs=10, verbose=2, validation_data=generator(X_test, y_test, augment=False), workers=8, use_multiprocessing=True, shuffle=True)
+
+
+model.save('model.h5')
+
+
+
