@@ -58,7 +58,7 @@ model.add(Dense(50, activation='elu'))
 model.add(Dense(10, activation='elu'))
 model.add(Dense(1))
 
-model.compile(optimizer='rmsprop', loss='mse')
+model.compile(optimizer='adam', loss='mse')
 model.summary()
 print('Training the model')
 
