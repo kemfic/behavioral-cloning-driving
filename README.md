@@ -23,3 +23,13 @@ dependencies
  - numpy
  - scipy
  - [udacity's simulator](https://github.com/udacity/self-driving-car-sim)
+
+ how to use
+ ---
+	0. Check out this [README](https://github.com/udacity/CarND-Behavioral-Cloning-P3)
+  1. Train a model
+	2. Save model into .h5 file
+	3. Run the simulator in auto mode
+	4. run ```python drive.py model.h5```
+	5. enjoy!
+
