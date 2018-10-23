@@ -1,6 +1,6 @@
 driving using behavioral cloning
 ---
-teaching a neural net to drive using a simulator
+teaching cars to drive
 
 end-to-end driving is a scam
 
