@@ -4,7 +4,7 @@ teaching cars to drive
 
 end-to-end driving is a scam
 
-check it out [in action!](https://www.youtube.com/watch?v=-vgAdaLyWEQ)
+check it out [in action!](https://www.youtube.com/watch?v=-vgAdaLyWEQ)\
 [less crappy video](https://www.youtube.com/watch?v=0k1GoGI6FRA&t=0s&list=PLz9N52s5FSIUfsxP8oxdoD0cgdM_ehSKl&index=8)
 
 [![demo video](resources/demo.png)](https://www.youtube.com/watch?v=-vgAdaLyWEQ)
